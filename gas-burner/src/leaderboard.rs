@@ -103,7 +103,7 @@ pub trait LeaderboardModule:
             });
 
         let new_user_index = prev_user_index + 1;
-        leaderboard_mapper.set(new_user_index, &user_entry);
+        leaderboard_mapper.set(new_user_index, user_entry);
     }
 
     fn increase_work_amount(&self, user_index: usize, work_amount: u64, current_week: Week) {
