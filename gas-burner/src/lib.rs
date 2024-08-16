@@ -12,6 +12,7 @@ pub mod work;
 pub trait GasBurner:
     work::WorkModule
     + leaderboard::LeaderboardModule
+    + rewards::RewardsModule
     + signature::SignatureModule
     + week_timekeeping::WeekTimekeepingModule
     + multiversx_sc_modules::pause::PauseModule
