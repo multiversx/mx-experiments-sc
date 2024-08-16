@@ -3,6 +3,7 @@
 multiversx_sc::imports!();
 
 pub mod leaderboard;
+pub mod rewards;
 pub mod signature;
 pub mod week_timekeeping;
 pub mod work;

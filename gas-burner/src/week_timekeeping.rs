@@ -10,7 +10,7 @@ pub type Week = usize;
 
 pub const EPOCHS_IN_WEEK: Epoch = 7;
 pub const FIRST_WEEK: Week = 1;
-static INVALID_WEEK_ERR_MSG: &[u8] = b"Week 0 is not a valid week";
+pub static INVALID_WEEK_ERR_MSG: &[u8] = b"Week 0 is not a valid week";
 
 #[multiversx_sc::module]
 pub trait WeekTimekeepingModule {

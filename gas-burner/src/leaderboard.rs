@@ -3,8 +3,6 @@ use crate::week_timekeeping::Week;
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-pub const TOP_LEADERBOARD_USERS_FOR_PRIZES: usize = 10;
-
 #[derive(TypeAbi, TopEncode, TopDecode)]
 pub struct LeaderboardEntry<M: ManagedTypeApi> {
     pub user_id: AddressId,
@@ -149,7 +147,4 @@ pub trait LeaderboardModule:
     #[view(getLeaderboardForWeek)]
     #[storage_mapper("leaderboard")]
     fn leaderboard(&self, week: Week) -> VecMapper<LeaderboardEntry<Self::Api>>;
-
-    #[storage_mapper("devRewardsClaimedForWeek")]
-    fn developer_rewards_claimed_for_week(&self, week: Week) -> SingleValueMapper<bool>;
 }
