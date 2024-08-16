@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "gas-burner",
+    "gas-burner/meta"
+]
