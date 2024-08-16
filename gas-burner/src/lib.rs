@@ -24,6 +24,8 @@ pub trait GasBurner:
 
         let current_epoch = self.blockchain().get_block_epoch();
         self.first_week_start_epoch().set(current_epoch);
+
+        self.set_paused(true);
     }
 
     #[upgrade]
