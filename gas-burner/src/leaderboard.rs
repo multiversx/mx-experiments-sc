@@ -15,10 +15,21 @@ pub struct LeaderboardEntry<M: ManagedTypeApi> {
 pub trait LeaderboardModule:
     crate::week_timekeeping::WeekTimekeepingModule + crate::signature::SignatureModule
 {
+    /// A placement of 0 means the user does not exist for the given week
+    #[view(getUserLeaderboardPlacement)]
+    fn get_user_leaderboard_placement(&self, user: ManagedAddress, week: Week) -> usize {
+        let user_id = self.user_id().get_id(&user);
+        if user_id == 0 {
+            return 0;
+        }
+
+        self.user_index_in_leaderboard(user_id, week).get()
+    }
+
     fn increase_leaderboard_entry(&self, user: &ManagedAddress, amount: u64) {
         let current_week = self.get_current_week();
         let user_id = self.user_id().get_id_or_insert(user);
-        let user_index = self.user_index_in_leaderboard(user_id).get();
+        let user_index = self.user_index_in_leaderboard(user_id, current_week).get();
         if user_index != 0 {
             self.increase_work_amount(user_index, amount, current_week);
         } else {
@@ -35,13 +46,15 @@ pub trait LeaderboardModule:
         let _ = leaderboard_mapper.push(&new_user_entry);
 
         let leaderboard_len = leaderboard_mapper.len();
-        self.user_index_in_leaderboard(user_id).set(leaderboard_len);
+        self.user_index_in_leaderboard(user_id, current_week)
+            .set(leaderboard_len);
 
         if leaderboard_len == 1 {
             return;
         }
 
         self.set_new_user_entry_in_mapper(
+            current_week,
             &new_user_entry,
             leaderboard_len,
             &mut leaderboard_mapper,
@@ -50,6 +63,7 @@ pub trait LeaderboardModule:
 
     fn set_new_user_entry_in_mapper(
         &self,
+        current_week: Week,
         new_user_entry: &LeaderboardEntry<Self::Api>,
         leaderboard_len: usize,
         leaderboard_mapper: &mut VecMapper<LeaderboardEntry<Self::Api>>,
@@ -61,7 +75,7 @@ pub trait LeaderboardModule:
                 break;
             }
 
-            self.move_user_down_lb(&existing_user_entry, leaderboard_mapper);
+            self.move_user_down_lb(current_week, &existing_user_entry, leaderboard_mapper);
             new_user_index -= 1;
         }
 
@@ -69,23 +83,24 @@ pub trait LeaderboardModule:
             leaderboard_mapper.set(new_user_index, new_user_entry);
         }
 
-        self.user_index_in_leaderboard(new_user_entry.user_id)
+        self.user_index_in_leaderboard(new_user_entry.user_id, current_week)
             .set(new_user_index);
     }
 
     fn move_user_down_lb(
         &self,
+        current_week: Week,
         user_entry: &LeaderboardEntry<Self::Api>,
         leaderboard_mapper: &mut VecMapper<LeaderboardEntry<Self::Api>>,
     ) {
-        let prev_user_index =
-            self.user_index_in_leaderboard(user_entry.user_id)
-                .update(|user_index| {
-                    let prev_user_index = *user_index;
-                    *user_index += 1;
+        let prev_user_index = self
+            .user_index_in_leaderboard(user_entry.user_id, current_week)
+            .update(|user_index| {
+                let prev_user_index = *user_index;
+                *user_index += 1;
 
-                    prev_user_index
-                });
+                prev_user_index
+            });
 
         let new_user_index = prev_user_index + 1;
         leaderboard_mapper.set(new_user_index, &user_entry);
@@ -96,11 +111,17 @@ pub trait LeaderboardModule:
         let mut user_entry = leaderboard_mapper.get(user_index);
         user_entry.work_amount += work_amount;
 
-        self.update_leaderboard_placement(&user_entry, user_index, &mut leaderboard_mapper);
+        self.update_leaderboard_placement(
+            current_week,
+            &user_entry,
+            user_index,
+            &mut leaderboard_mapper,
+        );
     }
 
     fn update_leaderboard_placement(
         &self,
+        current_week: Week,
         updated_user_entry: &LeaderboardEntry<Self::Api>,
         current_user_index: usize,
         leaderboard_mapper: &mut VecMapper<LeaderboardEntry<Self::Api>>,
@@ -112,17 +133,18 @@ pub trait LeaderboardModule:
                 break;
             }
 
-            self.move_user_down_lb(&existing_user_entry, leaderboard_mapper);
+            self.move_user_down_lb(current_week, &existing_user_entry, leaderboard_mapper);
             new_user_index -= 1;
         }
 
         leaderboard_mapper.set(new_user_index, updated_user_entry);
-        self.user_index_in_leaderboard(updated_user_entry.user_id)
+        self.user_index_in_leaderboard(updated_user_entry.user_id, current_week)
             .set(new_user_index);
     }
 
     #[storage_mapper("userIndexInLb")]
-    fn user_index_in_leaderboard(&self, user_id: AddressId) -> SingleValueMapper<usize>;
+    fn user_index_in_leaderboard(&self, user_id: AddressId, week: Week)
+        -> SingleValueMapper<usize>;
 
     #[view(getLeaderboardForWeek)]
     #[storage_mapper("leaderboard")]
