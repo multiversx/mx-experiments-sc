@@ -3,7 +3,7 @@ use crate::week_timekeeping::Week;
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-#[derive(TypeAbi, TopEncode, TopDecode)]
+#[derive(TypeAbi, TopEncode, TopDecode, PartialEq, Debug)]
 pub struct LeaderboardEntry<M: ManagedTypeApi> {
     pub user_id: AddressId,
     pub work_amount: BigUint<M>,
@@ -69,7 +69,7 @@ pub trait LeaderboardModule:
         let mut new_user_index = leaderboard_len;
         for user_index in (1..=leaderboard_len - 1).rev() {
             let existing_user_entry = leaderboard_mapper.get_unchecked(user_index);
-            if new_user_entry.work_amount < existing_user_entry.work_amount {
+            if new_user_entry.work_amount <= existing_user_entry.work_amount {
                 break;
             }
 
@@ -127,7 +127,7 @@ pub trait LeaderboardModule:
         let mut new_user_index = current_user_index;
         for user_index in (1..=current_user_index - 1).rev() {
             let existing_user_entry = leaderboard_mapper.get_unchecked(user_index);
-            if updated_user_entry.work_amount < existing_user_entry.work_amount {
+            if updated_user_entry.work_amount <= existing_user_entry.work_amount {
                 break;
             }
 

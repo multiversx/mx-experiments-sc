@@ -11,7 +11,7 @@ pub trait RewardsModule:
     + crate::signature::SignatureModule
 {
     #[endpoint(claimRewards)]
-    fn claim_rewards(&self, start_week: Week) {
+    fn claim_rewards(&self, start_week: Week) -> BigUint {
         require!(start_week > 0, INVALID_WEEK_ERR_MSG);
 
         let current_week = self.get_current_week();
@@ -24,6 +24,8 @@ pub trait RewardsModule:
         let user_id = self.user_id().get_id_non_zero(&caller);
         let total_rewards = self.claim_user_rewards(start_week, current_week, user_id);
         self.send().direct_non_zero_egld(&caller, &total_rewards);
+
+        total_rewards
     }
 
     fn claim_developer_rewards(&self, previous_week: Week) {

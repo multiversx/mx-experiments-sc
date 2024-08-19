@@ -33,6 +33,10 @@ pub trait WorkModule:
     }
 
     fn use_remaining_gas(&self) {
+        if cfg!(debug_assertions) {
+            return;
+        }
+
         let mut gas_left = self.blockchain().get_gas_left();
         while gas_left > GAS_TO_FINISH_ENDPOINT {
             gas_left = self.blockchain().get_gas_left();
