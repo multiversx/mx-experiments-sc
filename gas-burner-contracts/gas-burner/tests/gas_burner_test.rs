@@ -192,7 +192,7 @@ fn dev_rewards_test() {
             &rust_biguint!(0),
             |sc| {
                 let rewards = sc.claim_rewards(1);
-                assert_eq!(rewards, managed_biguint!(75_000)); // gets 75% of the rewards, as they have 300_000 out of 400_000
+                assert_eq!(rewards, managed_biguint!(75_000)); // gets 75% of the rewards, as they have 300M out of 400M
             },
         )
         .assert_ok();
