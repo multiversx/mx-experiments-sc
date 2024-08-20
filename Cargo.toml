@@ -2,6 +2,6 @@
 resolver = "2"
 
 members = [
-    "gas-burner",
-    "gas-burner/meta"
+    "gas-burner-contracts/gas-burner",
+    "gas-burner-contracts/gas-burner/meta"
 ]
