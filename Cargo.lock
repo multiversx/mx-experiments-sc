@@ -294,6 +294,7 @@ dependencies = [
  "multiversx-sc-modules",
  "multiversx-sc-scenario",
  "num-bigint",
+ "owner-sc",
 ]
 
 [[package]]

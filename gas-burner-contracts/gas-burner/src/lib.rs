@@ -18,9 +18,14 @@ pub trait GasBurner:
     + multiversx_sc_modules::pause::PauseModule
 {
     #[init]
-    fn init(&self, signer: ManagedAddress, token_id: TokenIdentifier) {
+    fn init(&self, owner_sc: ManagedAddress, signer: ManagedAddress, token_id: TokenIdentifier) {
         require!(token_id.is_valid_esdt_identifier(), "Invalid ESDT token");
+        require!(
+            !owner_sc.is_zero() && self.blockchain().is_smart_contract(&owner_sc),
+            "Invalid SC address"
+        );
 
+        self.owner_sc().set(owner_sc);
         self.signer().set(signer);
         self.token().set_token_id(token_id);
 

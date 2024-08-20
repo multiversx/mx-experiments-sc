@@ -35,15 +35,12 @@ pub trait RewardsModule:
             return;
         }
 
-        let own_sc_address = self.blockchain().get_sc_address();
-        let egld_balance_before = self.blockchain().get_balance(&own_sc_address);
-        self.send()
-            .claim_developer_rewards(own_sc_address.clone())
-            .sync_call();
-
-        let egld_balance_after = self.blockchain().get_balance(&own_sc_address);
-        let claimed_rewards = egld_balance_after - egld_balance_before;
-        self.total_rewards_week(previous_week).set(claimed_rewards);
+        let owner_sc_address = self.owner_sc().get();
+        let dev_rewards: BigUint = self
+            .owner_sc_proxy(owner_sc_address)
+            .claim_dev_rewards()
+            .execute_on_dest_context();
+        self.total_rewards_week(previous_week).set(dev_rewards);
 
         developer_rewards_claimed_for_week_mapper.set(true);
     }
@@ -111,4 +108,10 @@ pub trait RewardsModule:
 
     #[storage_mapper("userClaimedForWeek")]
     fn user_claimed_for_week(&self, week: Week) -> SingleValueMapper<bool>;
+
+    #[storage_mapper("ownerSc")]
+    fn owner_sc(&self) -> SingleValueMapper<ManagedAddress>;
+
+    #[proxy]
+    fn owner_sc_proxy(&self, sc_address: ManagedAddress) -> owner_sc::Proxy<Self::Api>;
 }
