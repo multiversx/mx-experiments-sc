@@ -1,6 +1,5 @@
 use gas_burner::{work::WorkModule, GasBurner};
 use multiversx_sc::types::{Address, EsdtLocalRole};
-use multiversx_sc_modules::pause::PauseModule;
 use multiversx_sc_scenario::{
     imports::{BlockchainStateWrapper, ContractObjWrapper},
     managed_address, managed_buffer, managed_token_id, rust_biguint, DebugApi,
@@ -60,8 +59,12 @@ where
                     managed_address!(&signer),
                     managed_token_id!(GAS_BURNER_TOKEN_ID),
                 );
+            })
+            .assert_ok();
 
-                sc.paused_status().set(false);
+        b_mock
+            .execute_tx(&owner, &owner_sc_wrapper, &rust_zero, |sc| {
+                sc.unpause_gas_burner();
             })
             .assert_ok();
 

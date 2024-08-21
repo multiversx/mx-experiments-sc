@@ -6,9 +6,9 @@
 
 // Init:                                 1
 // Upgrade:                              1
-// Endpoints:                            2
+// Endpoints:                            4
 // Async Callback (empty):               1
-// Total number of exported functions:   5
+// Total number of exported functions:   7
 
 #![no_std]
 
@@ -21,6 +21,8 @@ multiversx_sc_wasm_adapter::endpoints! {
         init => init
         upgrade => upgrade
         setGasBurnerAddress => set_gas_burner_address
+        pauseGasBurner => pause_gas_burner
+        unpauseGasBurner => unpause_gas_burner
         claimDevRewards => claim_dev_rewards
     )
 }

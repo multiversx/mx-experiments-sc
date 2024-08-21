@@ -2,6 +2,19 @@
 
 multiversx_sc::imports!();
 
+mod pausable_sc_proxy {
+    multiversx_sc::imports!();
+
+    #[multiversx_sc::proxy]
+    pub trait PausableScProxy {
+        #[endpoint]
+        fn pause(&self);
+
+        #[endpoint]
+        fn unpause(&self);
+    }
+}
+
 #[multiversx_sc::contract]
 pub trait OwnerSc {
     #[init]
@@ -19,6 +32,24 @@ pub trait OwnerSc {
         );
 
         self.gas_burner().set(gas_burner);
+    }
+
+    #[only_owner]
+    #[endpoint(pauseGasBurner)]
+    fn pause_gas_burner(&self) {
+        let gas_burner = self.gas_burner().get();
+        self.gas_burner_proxy(gas_burner)
+            .pause()
+            .execute_on_dest_context()
+    }
+
+    #[only_owner]
+    #[endpoint(unpauseGasBurner)]
+    fn unpause_gas_burner(&self) {
+        let gas_burner = self.gas_burner().get();
+        self.gas_burner_proxy(gas_burner)
+            .unpause()
+            .execute_on_dest_context()
     }
 
     #[endpoint(claimDevRewards)]
@@ -42,4 +73,7 @@ pub trait OwnerSc {
 
     #[storage_mapper("gasBurner")]
     fn gas_burner(&self) -> SingleValueMapper<ManagedAddress>;
+
+    #[proxy]
+    fn gas_burner_proxy(&self, sc_address: ManagedAddress) -> pausable_sc_proxy::Proxy<Self::Api>;
 }
