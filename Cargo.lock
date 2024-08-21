@@ -291,8 +291,10 @@ name = "gas-burner"
 version = "0.0.0"
 dependencies = [
  "multiversx-sc",
+ "multiversx-sc-modules",
  "multiversx-sc-scenario",
  "num-bigint",
+ "owner-sc",
 ]
 
 [[package]]
@@ -543,6 +545,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "multiversx-sc-modules"
+version = "0.52.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "61f5c29c6044f3dc9e866858feee625d7fae5604a68ac7bd66dec683eee97563"
+dependencies = [
+ "multiversx-sc",
+]
+
+[[package]]
 name = "multiversx-sc-scenario"
 version = "0.52.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -616,6 +627,23 @@ name = "opaque-debug"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
+
+[[package]]
+name = "owner-sc"
+version = "0.0.0"
+dependencies = [
+ "multiversx-sc",
+ "multiversx-sc-scenario",
+ "num-bigint",
+]
+
+[[package]]
+name = "owner-sc-meta"
+version = "0.0.0"
+dependencies = [
+ "multiversx-sc-meta-lib",
+ "owner-sc",
+]
 
 [[package]]
 name = "pathdiff"

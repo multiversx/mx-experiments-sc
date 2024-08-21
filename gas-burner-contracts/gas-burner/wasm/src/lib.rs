@@ -6,9 +6,9 @@
 
 // Init:                                 1
 // Upgrade:                              1
-// Endpoints:                            0
+// Endpoints:                           11
 // Async Callback (empty):               1
-// Total number of exported functions:   3
+// Total number of exported functions:  14
 
 #![no_std]
 
@@ -20,6 +20,17 @@ multiversx_sc_wasm_adapter::endpoints! {
     (
         init => init
         upgrade => upgrade
+        work => work
+        getTokenId => token
+        getUserLeaderboardPlacement => get_user_leaderboard_placement
+        getLeaderboardForWeek => leaderboard
+        claimRewards => claim_rewards
+        getUserNonce => get_user_nonce
+        getCurrentWeek => get_current_week
+        getFirstWeekStartEpoch => first_week_start_epoch
+        pause => pause_endpoint
+        unpause => unpause_endpoint
+        isPaused => paused_status
     )
 }
 
