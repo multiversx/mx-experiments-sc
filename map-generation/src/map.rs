@@ -145,11 +145,11 @@ pub trait MapModule {
             map.diamonds(1 << (steps - s - 1));
         }
 
-        for _x in 0..SIZE {
-            for _y in 0..SIZE {
-                // TODO: Do... something... ?
-            }
-        }
+        // for _x in 0..SIZE {
+        //     for _y in 0..SIZE {
+        //         // TODO: Do... something... ?
+        //     }
+        // }
 
         self.current_map_seed().set(&initial_seed);
 
