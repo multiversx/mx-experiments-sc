@@ -14,12 +14,20 @@ pub struct Map<M: ManagedTypeApi + CryptoApi> {
     terrain: [u32; SQUARED_SIZE],
 }
 
-impl<M: ManagedTypeApi + CryptoApi> Map<M> {
-    pub fn new() -> Self {
+impl<M: ManagedTypeApi + CryptoApi> Default for Map<M> {
+    #[inline]
+    fn default() -> Self {
         Self {
             rng: Random::new(),
             terrain: [0; SQUARED_SIZE],
         }
+    }
+}
+
+impl<M: ManagedTypeApi + CryptoApi> Map<M> {
+    #[inline]
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub fn new_from_seed(seed: Hash<M>) -> Self {
