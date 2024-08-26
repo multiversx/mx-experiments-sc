@@ -135,7 +135,7 @@ impl<M: ManagedTypeApi + CryptoApi> Map<M> {
 pub trait MapModule {
     #[only_owner]
     #[endpoint(generateNewMap)]
-    fn generate_new_map(&self) -> Hash<Self::Api> {
+    fn generate_new_map(&self) -> [u32; SQUARED_SIZE] {
         let mut map = Map::<Self::Api>::new();
         let initial_seed = Hash::from_raw_handle(map.rng.seed.get_raw_handle()).clone();
 
@@ -153,7 +153,7 @@ pub trait MapModule {
 
         self.current_map_seed().set(&initial_seed);
 
-        initial_seed
+        map.terrain
     }
 
     #[view(getCurrentMapSeed)]
