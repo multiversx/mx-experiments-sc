@@ -58,14 +58,12 @@ impl<M: ManagedTypeApi + CryptoApi> Map<M> {
     }
 
     pub fn square(&mut self, x: u32, y: u32, radius: u32) {
-        let height = self.wiggle(
-            (self.get(x - radius, y - radius)
-                + self.get(x - radius, y + radius)
-                + self.get(x + radius, y - radius)
-                + self.get(x + radius, y + radius))
-                / 4,
-            WIGGLE,
-        );
+        let top_left = self.get(x - radius, y - radius);
+        let bottom_left = self.get(x - radius, y + radius);
+        let top_right = self.get(x + radius, y - radius);
+        let bottom_right = self.get(x + radius, y + radius);
+        let average = (top_left + bottom_left + top_right + bottom_right) / 4;
+        let height = self.wiggle(average, WIGGLE);
 
         self.set(x, y, height);
     }
@@ -102,20 +100,21 @@ impl<M: ManagedTypeApi + CryptoApi> Map<M> {
         let step2 = step * 2;
         for x in 0..step {
             for y in 0..step {
-                self.square(
-                    SIZE / step2 + (x * SIZE / step),
-                    SIZE / step2 + (y * SIZE / step),
-                    SIZE / step2,
-                );
+                let square_x = SIZE / step2 + (x * SIZE / step);
+                let square_y = SIZE / step2 + (y * SIZE / step);
+                let radius = SIZE / step2;
+
+                self.square(square_x, square_y, radius);
             }
         }
     }
 
     pub fn diamonds(&mut self, radius: u32) {
-        for x in (0..SIZE).step_by(radius as usize) {
+        let radius_usize = radius as usize;
+        for x in (0..SIZE).step_by(radius_usize) {
             let y_start: u32 = if (x / (radius)) % 2 == 0 { radius } else { 0 };
 
-            for y in (y_start..SIZE).step_by(radius as usize * 2) {
+            for y in (y_start..SIZE).step_by(radius_usize * 2) {
                 self.diamond(x, y, radius);
             }
         }
