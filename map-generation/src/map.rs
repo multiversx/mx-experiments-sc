@@ -46,15 +46,15 @@ impl<M: ManagedTypeApi + CryptoApi> Map<M> {
     }
 
     pub fn init(&mut self) {
-        let a = self.rng.next_u8() as u32;
-        let b = self.rng.next_u8() as u32;
-        let c = self.rng.next_u8() as u32;
-        let d = self.rng.next_u8() as u32;
+        let top_left = self.rng.next_u8() as u32;
+        let bottom_left = self.rng.next_u8() as u32;
+        let top_right = self.rng.next_u8() as u32;
+        let bottom_right = self.rng.next_u8() as u32;
 
-        self.set(0, 0, a);
-        self.set(SIZE - 1, 0, b);
-        self.set(0, SIZE - 1, c);
-        self.set(SIZE - 1, SIZE - 1, d);
+        self.set(0, 0, top_left);
+        self.set(SIZE - 1, 0, bottom_left);
+        self.set(0, SIZE - 1, top_right);
+        self.set(SIZE - 1, SIZE - 1, bottom_right);
     }
 
     pub fn square(&mut self, x: u32, y: u32, radius: u32) {
