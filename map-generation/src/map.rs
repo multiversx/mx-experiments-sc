@@ -134,6 +134,7 @@ pub trait MapModule {
         let seed = unsafe { seed_result.unwrap_unchecked() };
         let mut map = Map::new(seed);
         let initial_seed = map.rng.seed;
+        map.init::<Self::Api>();
 
         let steps = TILES.trailing_zeros() + 1;
         for s in 0..steps {
