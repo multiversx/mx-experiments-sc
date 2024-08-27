@@ -147,7 +147,7 @@ pub trait MapModule {
         //     }
         // }
 
-        self.current_map_seed().set(&initial_seed);
+        self.current_map_seed().set(initial_seed);
 
         map.terrain
     }
