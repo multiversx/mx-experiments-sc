@@ -1,62 +1,45 @@
-// Stolen (and adapted) from launchpad: https://github.com/multiversx/mx-launchpad-sc/blob/main/launchpad-common/src/random.rs
-
-use multiversx_sc::api::{CryptoApi, CryptoApiImpl};
-
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
 const U8_BYTES: usize = 1;
 const I16_BYTES: usize = 2;
+pub const U64_BYTES: usize = 8;
 pub const HASH_LEN: usize = 32;
-static FAILED_COPY_ERR_MSG: &[u8] = b"Failed copy to/from managed buffer";
+static FAILED_DECODE_ERR_MSG: &[u8] = b"Failed decoding u64";
 
-pub type Hash<M> = ManagedByteArray<M, HASH_LEN>;
+pub type Seed = u64;
 
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode)]
-pub struct Random<M: ManagedTypeApi + CryptoApi> {
-    pub seed: ManagedBuffer<M>,
+pub struct Random {
+    pub seed: Seed,
     pub index: usize,
 }
 
-impl<M: ManagedTypeApi + CryptoApi> Default for Random<M> {
-    fn default() -> Self {
+impl Random {
+    #[inline]
+    pub fn new(rand_seed: Seed) -> Self {
         Self {
-            seed: ManagedBuffer::new_random(HASH_LEN),
+            seed: rand_seed,
             index: 0,
         }
     }
-}
-
-impl<M: ManagedTypeApi + CryptoApi> Random<M> {
-    #[inline]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn from_hash(hash: Hash<M>, index: usize) -> Self {
-        Self {
-            seed: ManagedBuffer::from_raw_handle(hash.get_raw_handle()),
-            index,
-        }
-    }
 
     #[inline]
-    pub fn next_u8(&mut self) -> u8 {
-        let value = self.next_value(U8_BYTES);
+    pub fn next_u8<Api: ManagedTypeApi>(&mut self) -> u8 {
+        let value = self.next_value::<Api>(U8_BYTES);
 
         value as u8
     }
 
     #[inline]
-    pub fn next_i16(&mut self) -> i16 {
-        let value = self.next_value(I16_BYTES);
+    pub fn next_i16<Api: ManagedTypeApi>(&mut self) -> i16 {
+        let value = self.next_value::<Api>(I16_BYTES);
 
         value as i16
     }
 
-    // TODO: Test if this actually works properly with negative numbers
-    pub fn gen_range(&mut self, min: i16, max: i16) -> i16 {
-        let rand = self.next_i16();
+    pub fn gen_range<Api: ManagedTypeApi>(&mut self, min: i16, max: i16) -> i16 {
+        let rand = self.next_i16::<Api>();
 
         if min >= max {
             min
@@ -65,26 +48,51 @@ impl<M: ManagedTypeApi + CryptoApi> Random<M> {
         }
     }
 
-    fn next_value(&mut self, size: usize) -> u64 {
-        if self.index + size > HASH_LEN {
-            self.hash_seed();
+    fn next_value<Api: ManagedTypeApi>(&mut self, size: usize) -> u64 {
+        if self.index + size > U64_BYTES {
+            self.xor_shift_seed();
         }
 
-        let raw_buffer = match self.seed.copy_slice(self.index, size) {
-            Some(buffer) => buffer,
-            None => M::error_api_impl().signal_error(FAILED_COPY_ERR_MSG),
-        };
-        let rand = u64::top_decode(raw_buffer).unwrap_or_default();
+        let seed_bytes = self.seed.to_be_bytes();
+        let val_range = &seed_bytes[self.index..self.index + size];
+        let decode_result = u64::top_decode(val_range);
+        if decode_result.is_err() {
+            Api::error_api_impl().signal_error(FAILED_DECODE_ERR_MSG);
+        }
 
+        let rand = unsafe { decode_result.unwrap_unchecked() };
         self.index += size;
 
         rand
     }
 
-    fn hash_seed(&mut self) {
-        let handle = self.seed.get_raw_handle();
-        M::crypto_api_impl().sha256_managed(handle.into(), handle.into());
-
+    // Stolen from: https://en.wikipedia.org/wiki/Xorshift
+    fn xor_shift_seed(&mut self) {
+        let mut new_seed = self.seed;
+        new_seed ^= new_seed << 13;
+        new_seed ^= new_seed >> 7;
+        new_seed ^= new_seed << 17;
+        self.seed = new_seed;
         self.index = 0;
+    }
+}
+
+#[cfg(test)]
+mod randomness_tests {
+    use multiversx_sc_scenario::DebugApi;
+
+    use super::*;
+
+    #[test]
+    fn gen_range_test() {
+        let mut random = Random::new(0);
+        let rand_nr = random.gen_range::<DebugApi>(-20, -10);
+        assert_eq!(rand_nr, -20);
+
+        let rand_nr = random.gen_range::<DebugApi>(10, 20);
+        assert_eq!(rand_nr, 10);
+
+        let rand_nr = random.gen_range::<DebugApi>(-20, 20);
+        assert_eq!(rand_nr, -20);
     }
 }
