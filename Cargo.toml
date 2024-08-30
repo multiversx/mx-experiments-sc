@@ -5,5 +5,7 @@ members = [
     "gas-burner-contracts/gas-burner",
     "gas-burner-contracts/gas-burner/meta",
     "gas-burner-contracts/owner-sc",
-    "gas-burner-contracts/owner-sc/meta"
+    "gas-burner-contracts/owner-sc/meta",
+    "nft-series-minter",
+    "nft-series-minter/meta"
 ]
