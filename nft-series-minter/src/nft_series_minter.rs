@@ -2,6 +2,7 @@
 
 use multiversx_sc::imports::*;
 mod nft_module;
+pub mod nft_series_minter_proxy;
 
 #[multiversx_sc::contract]
 pub trait NftSeriesMinter: nft_module::NftModule {
