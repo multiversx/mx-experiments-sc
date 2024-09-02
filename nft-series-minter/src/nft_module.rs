@@ -3,6 +3,9 @@ use multiversx_sc::{derive_imports::*, imports::*};
 const NFT_AMOUNT: u32 = 1;
 const ROYALTIES_MAX: u32 = 10_000;
 
+static TAGS_PREFIX: &[u8] = b"tags:";
+static ATTRIBUTES_SEPARATOR: &[u8] = b";";
+
 #[derive(TopEncode, TopDecode, NestedEncode, NestedDecode)]
 struct NftInfo<M: ManagedTypeApi> {
     name: ManagedBuffer<M>,
@@ -103,33 +106,36 @@ pub trait NftModule {
         });
     }
 
-    fn create_nft_with_stored_attributes(
-        &self,
-        amount_to_mint: u64,
-    ) -> ManagedVec<Self::Api, EsdtTokenPayment> {
+    fn create_nft_with_serial(&self, serial: ManagedBuffer) -> EsdtTokenPayment {
         self.require_token_issued();
         let nft_info = self.nft_token_info().get();
 
-        let nft_token_id = self.nft_token_id().get();
-        let mut nfts: ManagedVec<Self::Api, EsdtTokenPayment> = ManagedVec::new();
-        for _ in 0..amount_to_mint {
-            let nft_nonce = self.send().esdt_nft_create(
-                &nft_token_id,
-                &BigUint::from(NFT_AMOUNT),
-                &nft_info.name,
-                &nft_info.royalties,
-                &nft_info.hash,
-                &nft_info.attributes,
-                &nft_info.uri,
-            );
-            nfts.push(EsdtTokenPayment::new(
-                nft_token_id.clone(),
-                nft_nonce,
-                1u64.into(),
-            ))
-        }
+        let tags_attributes = self.build_attributes_tags_part(&serial);
+        let mut attributes = nft_info.attributes;
+        attributes.append_bytes(ATTRIBUTES_SEPARATOR);
+        attributes.append(&tags_attributes);
 
-        nfts
+        let nft_token_id = self.nft_token_id().get();
+        let nft_nonce = self.send().esdt_nft_create(
+            &nft_token_id,
+            &BigUint::from(NFT_AMOUNT),
+            &nft_info.name,
+            &nft_info.royalties,
+            &nft_info.hash,
+            &attributes,
+            &nft_info.uri,
+        );
+        EsdtTokenPayment::new(nft_token_id.clone(), nft_nonce, 1u64.into())
+    }
+
+    fn build_attributes_tags_part(
+        &self,
+        serial: &ManagedBuffer<Self::Api>,
+    ) -> ManagedBuffer<Self::Api> {
+        let mut tags_attributes = ManagedBuffer::new_from_bytes(TAGS_PREFIX);
+        tags_attributes.append(&serial);
+
+        tags_attributes
     }
 
     fn require_token_issued(&self) {
