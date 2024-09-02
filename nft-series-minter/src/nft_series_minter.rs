@@ -12,7 +12,6 @@ pub trait NftSeriesMinter: nft_module::NftModule {
     #[upgrade]
     fn upgrade(&self) {}
 
-    #[only_owner]
     #[endpoint(createNft)]
     fn create_nft(
         &self,

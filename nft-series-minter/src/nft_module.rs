@@ -17,7 +17,6 @@ struct NftInfo<M: ManagedTypeApi> {
 }
 #[multiversx_sc::module]
 pub trait NftModule {
-    #[only_owner]
     #[payable("EGLD")]
     #[endpoint(issueToken)]
     fn issue_token(
@@ -54,7 +53,6 @@ pub trait NftModule {
             .async_call_and_exit()
     }
 
-    #[only_owner]
     #[endpoint(setLocalRoles)]
     fn set_local_roles(&self) {
         self.require_token_issued();
