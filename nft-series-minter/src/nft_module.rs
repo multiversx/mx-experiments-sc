@@ -91,8 +91,8 @@ pub trait NftModule {
 
     fn create_nft_with_serial(&self, serial: ManagedBuffer) -> EsdtTokenPayment {
         self.require_token_issued();
-        let nft_info = self.nft_token_info().get();
 
+        let nft_info = self.nft_token_info().get();
         let tags_attributes = self.build_attributes_tags_part(&serial);
         let mut attributes = nft_info.attributes;
         attributes.append_bytes(ATTRIBUTES_SEPARATOR);
@@ -116,7 +116,7 @@ pub trait NftModule {
         serial: &ManagedBuffer<Self::Api>,
     ) -> ManagedBuffer<Self::Api> {
         let mut tags_attributes = ManagedBuffer::new_from_bytes(TAGS_PREFIX);
-        tags_attributes.append(&serial);
+        tags_attributes.append(serial);
 
         tags_attributes
     }
