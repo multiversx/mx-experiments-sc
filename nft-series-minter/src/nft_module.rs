@@ -15,6 +15,7 @@ struct NftInfo<M: ManagedTypeApi> {
     uri: ManagedVec<M, ManagedBuffer<M>>,
     last_nonce: u64,
 }
+
 #[multiversx_sc::module]
 pub trait NftModule {
     #[payable("EGLD")]
@@ -27,44 +28,28 @@ pub trait NftModule {
         uri: ManagedVec<ManagedBuffer>,
         attributes: ManagedBuffer,
     ) {
-        require!(self.nft_token_id().is_empty(), "Token already issued");
+        require!(self.nft_token().is_empty(), "Token already issued");
         require!(royalties <= ROYALTIES_MAX, "Royalties cannot exceed 100%");
 
         self.setup_nft_info(token_name.clone(), royalties, uri, attributes);
 
-        let payment_amount = self.call_value().egld_value();
-        self.send()
-            .esdt_system_sc_proxy()
-            .issue_non_fungible(
-                payment_amount.clone_value(),
-                &token_name,
-                &token_ticker,
-                NonFungibleTokenProperties {
-                    can_freeze: true,
-                    can_wipe: true,
-                    can_pause: true,
-                    can_transfer_create_role: true,
-                    can_change_owner: true,
-                    can_upgrade: true,
-                    can_add_special_roles: true,
-                },
-            )
-            .with_callback(self.callbacks().issue_callback())
-            .async_call_and_exit()
+        let payment_amount = self.call_value().egld_value().clone_value();
+        self.nft_token().issue(
+            EsdtTokenType::NonFungible,
+            payment_amount,
+            token_name,
+            token_ticker,
+            0,
+            Some(self.callbacks().issue_callback()),
+        );
     }
 
     #[endpoint(setLocalRoles)]
     fn set_local_roles(&self) {
         self.require_token_issued();
 
-        self.send()
-            .esdt_system_sc_proxy()
-            .set_special_roles(
-                &self.blockchain().get_sc_address(),
-                &self.nft_token_id().get(),
-                [EsdtLocalRole::NftCreate][..].iter().cloned(),
-            )
-            .async_call_and_exit()
+        self.nft_token()
+            .set_local_roles(&[EsdtLocalRole::NftCreate], None);
     }
 
     #[callback]
@@ -74,7 +59,7 @@ pub trait NftModule {
     ) {
         match result {
             ManagedAsyncCallResult::Ok(token_id) => {
-                self.nft_token_id().set(token_id.unwrap_esdt());
+                self.nft_token().set_token_id(token_id.unwrap_esdt());
             }
             ManagedAsyncCallResult::Err(_) => {
                 let returned = self.call_value().egld_or_single_esdt();
@@ -113,7 +98,7 @@ pub trait NftModule {
         attributes.append_bytes(ATTRIBUTES_SEPARATOR);
         attributes.append(&tags_attributes);
 
-        let nft_token_id = self.nft_token_id().get();
+        let nft_token_id = self.nft_token().get_token_id();
         let nft_nonce = self.send().esdt_nft_create(
             &nft_token_id,
             &BigUint::from(NFT_AMOUNT),
@@ -137,11 +122,11 @@ pub trait NftModule {
     }
 
     fn require_token_issued(&self) {
-        require!(!self.nft_token_id().is_empty(), "Token not issued");
+        require!(!self.nft_token().is_empty(), "Token not issued");
     }
 
     #[storage_mapper("nftTokenId")]
-    fn nft_token_id(&self) -> SingleValueMapper<TokenIdentifier>;
+    fn nft_token(&self) -> NonFungibleTokenMapper;
 
     #[storage_mapper("nftTokenInfo")]
     fn nft_token_info(&self) -> SingleValueMapper<NftInfo<Self::Api>>;

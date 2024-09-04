@@ -18,9 +18,10 @@ pub trait NftSeriesMinter: nft_module::NftModule {
         receiver_address: ManagedAddress,
         serials: MultiValueEncoded<ManagedBuffer>,
     ) {
-        let mut nfts: ManagedVec<EsdtTokenPayment> = ManagedVec::new();
+        let mut nfts = ManagedVec::new();
         for serial in serials {
-            nfts.push(self.create_nft_with_serial(serial));
+            let new_nft = self.create_nft_with_serial(serial);
+            nfts.push(new_nft);
         }
 
         self.send().direct_multi(&receiver_address, &nfts);
